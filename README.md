@@ -20,6 +20,78 @@ Different AMMs use different formulas according to the specific use cases they t
 
 # Implementing the smart contract
 
+Lets start with the boilerplate code. We create a contract named `AMM` and use the SafeMath library while performing mathematical operations.  
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.7.0 <0.9.0;
+
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+contract AMM {
+    using SafeMath for uint256;
+}
+```
+
+Next we define the state variables needed to operate the AMM. For simplicity purpose, We are maintaining our own internal balance mapping (token1Balance & token2Balance) instead of dealing with the ERC-20 tokens. As solidity doesn't support float numbers, We will reserve the first six digits of an integer value to represent decimal value after the dot. This is achieved by scaling the numbers by a factor of 10^6 (PRECISION).
+
+```solidity
+uint256 totalShares;  // Stores the total amount of share issued for the pool
+uint256 totalToken1;  // Stores the amount of Token1 locked in the pool
+uint256 totalToken2;  // Stores the amount of Token2 locked in the pool
+uint256 K;            // Algorithmic constant used to determine price (K = totalToken1 * totalToken2)
+
+uint256 constant PRECISION = 1_000_000;  // Precision of 6 decimal places
+
+mapping(address => uint256) shares;  // Stores the share holding of each provider
+
+mapping(address => uint256) token1Balance;  // Stores the available balance of user outside of the AMM
+mapping(address => uint256) token2Balance;
+```
+
+Now we will define modifiers that will be used to check the validity of the parameters passed to the functions and restrict certain activities when the pool is empty.
+
+```solidity
+// Ensures that the _qty is non-zero and the user has enough balance
+modifier validAmountCheck(mapping(address => uint256) storage _balance, uint256 _qty) {
+    require(_qty > 0, "Amount cannot be zero!");
+    require(_qty <= _balance[msg.sender], "Insufficient amount");
+    _;
+}
+
+// Restricts withdraw, swap feature till liquidity is added to the pool
+modifier activePool() {
+    require(totalShares > 0, "Zero Liquidity");
+    _;
+}
+```
+
+The following functions are used to get the present state of the smart contract
+
+```solidity
+// Returns the balance of the user
+function getMyHoldings() external view returns(uint256 amountToken1, uint256 amountToken2, uint256 myShare) {
+    amountToken1 = token1Balance[msg.sender];
+    amountToken2 = token2Balance[msg.sender];
+    myShare = shares[msg.sender];
+}
+
+// Returns the total amount of tokens locked in the pool and the total shares issued corresponding to it
+function getPoolDetails() external view returns(uint256, uint256, uint256) {
+    return (totalToken1, totalToken2, totalShares);
+}
+```
+
+As we are not using the ERC-20 tokens and instead maintaining record of the balance ourselves. We need a way to allocate tokens to the new users so that they can interact with the dApp. User can call the faucet function to get some tokens to play with!
+
+```solidity
+// Sends free token(s) to the invoker
+function faucet(uint256 _amountToken1, uint256 _amountToken2) external {
+    token1Balance[msg.sender] = token1Balance[msg.sender].add(_amountToken1);
+    token2Balance[msg.sender] = token2Balance[msg.sender].add(_amountToken2);
+}
+```
+
 # Deploying the smart contract
 
 ## Setting up Metamask
@@ -231,6 +303,7 @@ Open a terminal and navigate to the directory where we will create the applicati
 ```bash
 cd /path/to/directory
 ```
+
 Create a new react app.
 ```bash
 npx create-react-app avalanche-amm
@@ -241,11 +314,13 @@ Move to the newly created directory and install the given dependencies.
 cd avalanche-amm
 npm install --save ethers@5.4.7 react-icons@4.3.1
 ```
+
 Create a new directory `components` inside the `src` directory, where we will be keeping all our React components, using the following command :
 ```bash
 mkdir ./src/components
 cd ./src/components
 ```
+
 Now lets create the most reused component which takes user-input for our dApp. Create a new file called `BoxTemplate.jsx` and paste the following code : 
 ```javascript
 import "../styles.css";
@@ -1565,6 +1640,7 @@ npm start
 ![preview]()
 
 # Conclusion
+Congratulations! We have successfully developed a working AMM model where users can swap tokens, provide & withdraw liquidity. As a next step, you can play around with the price formula, integrate the ERC20 standard, introduce fees as an incentive mechanism for providers or add slippage protection, and much more...
 
 ## Troubleshooting
 
@@ -1584,4 +1660,6 @@ The tutorial was created by [Sayan Kar](https://github.com/SayanKar), [Yash Koth
 
 # References
 
-- Smart contract deployment process - [Deploy a Smart Contract on Avalanche using Remix and MetaMask](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask)
+- [Deploy a Smart Contract on Avalanche using Remix and MetaMask](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask)
+
+- [How Uniswap works](https://docs.uniswap.org/protocol/V2/concepts/protocol-overview/how-uniswap-works)
