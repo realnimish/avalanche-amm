@@ -2,11 +2,11 @@
 
 # Introduction
 
-AMM is a type of decentralized exchange which is based on a mathematical formula of price assets. It allows digital assets to be traded without any permissions and automatically by using liquidity pools instead of any traditional buyers and sellers which uses an order book that were used in traditional exchange, here assets are priced according to a pricing algorithm. 
+AMM is a type of decentralized exchange which is based on a mathematical formula of price assets. It allows digital assets to be traded without any permissions and automatically by using liquidity pools instead of any traditional buyers and sellers which uses an order book that was used in traditional exchange, here assets are priced according to a pricing algorithm. 
 
-For example, Uniswap uses p * q = k, where p is the amount of one token in the liquidity pool, and q is the amount of the other. Here “k” is a fixed constant which means the pool’s total liquidity always has to remain the same. For further explanation let us take example, if an AMM has coin A and Coin B, two volatile assets, every time A is bought, the price of A goes up as there is less A in the pool than before the purchase. Conversely, the price of B goes down as there is more B in the pool. The pool stays in constant balance, where the total value of A in the pool will always equal the total value of B in the pool. The size will expand only when new liquidity providers joins the pool.
+For example, Uniswap uses p * q = k, where p is the amount of one token in the liquidity pool, and q is the amount of the other. Here “k” is a fixed constant which means the pool’s total liquidity always has to remain the same. For further explanation let us take an example if an AMM has coin A and Coin B, two volatile assets, every time A is bought, the price of A goes up as there is less A in the pool than before the purchase. Conversely, the price of B goes down as there is more B in the pool. The pool stays in constant balance, where the total value of A in the pool will always equal the total value of B in the pool. The size will expand only when new liquidity providers join the pool.
 
-Different AMMs use different formulas according to the specific use cases they target and the similarity between all of them is that they determine the prices algorithmically. In this tutorial we will learn how to build a very basic AMM having features namely Provide, Withdraw & Swap with no incentive mechanism like trading fees. Also we will not deal with ERC20 tokens; instead we will maintain our own mapping storing the balance of the accounts to keep things simple!
+Different AMMs use different formulas according to the specific use cases they target and the similarity between all of them is that they determine the prices algorithmically. In this tutorial, we will learn how to build a very basic AMM having features namely Provide, Withdraw & Swap with no incentive mechanism like trading fees. Also, we will not deal with ERC20 tokens; instead we will maintain our own mapping storing the balance of the accounts to keep things simple!
 
 # Prerequisites
 
@@ -44,7 +44,7 @@ Open [Remix](https://remix.ethereum.org/) -> Select Solidity
 
 ![remix-preview](https://gblobscdn.gitbook.com/assets%2F-MKmFQYgp3Usx3i-VLJU%2F-MLOuR33iyanZrmnCDTl%2F-MLOw5RJ5tNGvy2C90xN%2Fimage.png?alt=media&token=391f3978-7d53-4112-b45a-e89c3d6d783d)
 
-Create a `AMM.sol` file in the Remix file explorer, and paste the following code :
+Create an `AMM.sol` file in the Remix file explorer, and paste the following code :
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -216,16 +216,16 @@ contract AMM {
 
 Navigate to the Solidity compiler Tab on the left side navigation bar and click the blue button to compile the `AMM.sol` contract. Note down the `ABI` as it will be required in the next section.
 
-Navigate to Deploy Tab and open the “ENVIRONMENT” drop-down. Select "Injected Web3" (make sure Metamask is loaded) and click "Deploy" button. 
+Navigate to Deploy Tab and open the “ENVIRONMENT” drop-down. Select "Injected Web3" (make sure Metamask is loaded) and click the "Deploy" button. 
 
 Approve the transaction on Metamask pop-up interface. Once our contract is deployed successfully, Note down the `contract address`.
 
 {% hint style="info" %}  
-An Application Binary Interface (ABI) is a JSON object which stores the metadata about the methods of a contract like data type of input parameters, return data type & property of the method like payable, view, pure etc. You can learn more about the ABI from the [solidity documentation](https://docs.soliditylang.org/en/latest/abi-spec.html)  
+An Application Binary Interface (ABI) is a JSON object which stores the metadata about the methods of a contract like data type of input parameters, return data type & property of the method like payable, view, pure, etc. You can learn more about the ABI from the [solidity documentation](https://docs.soliditylang.org/en/latest/abi-spec.html)  
 {% endhint %}
 
 # Creating a frontend in React
-Now, we are going to create a react app and setup the frontend of the application. In the frontend we represent token1 and token2 as KAR and KOTHI.
+Now, we are going to create a react app and set up the frontend of the application. In the frontend, we represent token1 and token2 as KAR and KOTHI.
 
 Open a terminal and navigate to the directory where we will create the application.
 ```bash
@@ -241,7 +241,7 @@ Move to the newly created directory and install the given dependencies.
 cd avalanche-amm
 npm install --save ethers@5.4.7 react-icons@4.3.1
 ```
-Create a new directory `components` inside `src` directory, where we will be keeping all our React components, using the following command :
+Create a new directory `components` inside the `src` directory, where we will be keeping all our React components, using the following command :
 ```bash
 mkdir ./src/components
 cd ./src/components
@@ -588,7 +588,7 @@ export default function ProvideComponent(props) {
 }
 ```
 
-The swap allows to convert one token to another depending on the conversion rate, lets create the component implementing this feature. Create a new file called `SwapComponent.jsx` and paste the following code: 
+The swap allows to convert one token to another depending on the conversion rate, let's create the component implementing this feature. Create a new file called `SwapComponent.jsx` and paste the following code: 
 
 ```javascript
 import { useState } from "react";
@@ -1227,8 +1227,7 @@ import App from "./App";
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-
-All the constants used in the application will be stored in an file named `constants.js`. Create a new file nammed `constants.js` and paste the following code:
+All the constants used in the application will be stored in a file named `constants.js`. Create a new file named `constants.js` and paste the following code:
 
 ```javascript
 export const PRECISION = 1000000;
@@ -1237,7 +1236,7 @@ export const CONTRACT_ADDRESS = /*PASTE THE CONTRACT ADDRESS HERE*/;
 export const abi = /*PASTE THE CONTRACT ABI*/; 
 ```
 
-Note that you have to store the contract address and the abi you copied from remix in this file in the variables named `CONTRACT_ADDRESS` and `abi` respectively. The `constants.js` file should look like this!
+Note that you have to store the contract address and the ABI you copied from remix in this file in the variables named `CONTRACT_ADDRESS` and `abi` respectively. The `constants.js` file should look like this!
 
 ```javascript
 
@@ -1537,19 +1536,47 @@ export const abi = [
 ```
 
 {% hint style="info" %}  
-An Application Binary Interface (ABI) is a JSON object which stores the metadata about the methods of a contract like data type of input parameters, return data type & property of the method like payable, view, pure etc. You can learn more about the ABI from the [solidity documentation](https://docs.soliditylang.org/en/latest/abi-spec.html)  
+An Application Binary Interface (ABI) is a JSON object which stores the metadata about the methods of a contract like data type of input parameters, return data type & property of the method like payable, view, pure, etc. You can learn more about the ABI from the [solidity documentation](https://docs.soliditylang.org/en/latest/abi-spec.html)  
 {% endhint %}
 
-Now its time to run our React app. Use the following command to start the React app.
+Now it's time to run our React app. Use the following command to start the React app.
 ```bash
 npm start
 ```
 
 # Walkthrough
 
+* Visit [http://localhost:3000](http://localhost:3000) to interact with the AMM.
+
+* Getting funds from the faucet to interact with the AMM
+
+![preview]()
+
+* Adding liquidity in the pool 
+
+![preview]()
+
+* Swapping tokens
+
+![preview]()
+
+* Withdrawing liquidity from the pool 
+
+![preview]()
+
 # Conclusion
 
-# Troubleshooting
+## Troubleshooting
+
+**Transaction Failure**
+
+* Check if your account has sufficient balance at [fuji block-explorer](https://cchain.explorer.avax-test.network/). You can fund your address from the given [faucet](https://faucet.avax-test.network/)
+
+![Zero balance preview](https://raw.githubusercontent.com/realnimish/blockchain-chat-app/main/public/zero_balance.jpeg)
+
+* Make sure that you have selected the correct account on metamask if you have more than one account connected to the site.
+
+![Multiple account preview](https://raw.githubusercontent.com/realnimish/blockchain-chat-app/main/public/multiple_accounts.jpeg)
 
 # About the Author(s)  
 
