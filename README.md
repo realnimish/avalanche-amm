@@ -32,7 +32,7 @@ Log in to MetaMask -> Click the Network drop-down -> Select Custom RPC
 
 * **Network Name**: Avalanche FUJI C-Chain
 * **New RPC URL**: [https://api.avax-test.network/ext/bc/C/rpc](https://api.avax-test.network/ext/bc/C/rpc)
-* **ChainID**: `43114`
+* **ChainID**: `43113`
 * **Symbol**: `C-AVAX`
 * **Explorer**: [https://cchain.explorer.avax-test.network](https://cchain.explorer.avax-test.network/)
 
@@ -53,7 +53,6 @@ pragma solidity >=0.7.0 <0.9.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract AMM {
-    
     using SafeMath for uint256;
     uint256 totalShares;  // Stores the total amount of share issued for the pool
     uint256 totalToken1;  // Stores the amount of Token1 locked in the pool
@@ -117,10 +116,10 @@ contract AMM {
         if(totalShares == 0) { // Genesis liquidity is issued 100 Shares
             share = 100*PRECISION;
         } else{
-            // Ensures that the amount of tokens send have equivalent value
-            require(totalToken1.mul(_amountToken2) == totalToken2.mul(_amountToken1), "Equivalent value of tokens not provided...");
-            // Calculates the corresponding amount of new share that needs to be issued
-            share = totalShares.mul(_amountToken1).div(totalToken1);
+            uint256 share1 = totalShares.mul(_amountToken1).div(totalToken1);
+	    	uint256 share2 = totalShares.mul(_amountToken2).div(totalToken2);
+	    	require(share1 == share2, "Equivalent value of tokens not provided...");
+	   		share = share1;
         }
 
         require(share > 0, "Asset value less than threshold for contribution!");
@@ -215,7 +214,7 @@ contract AMM {
 }
 ```
 
-Navigate to the Solidity compiler Tab on the left side navigation bar and click the blue button to compile the `Database.sol` contract. Note down the `ABI` as it will be required in the next section.
+Navigate to the Solidity compiler Tab on the left side navigation bar and click the blue button to compile the `AMM.sol` contract. Note down the `ABI` as it will be required in the next section.
 
 Navigate to Deploy Tab and open the “ENVIRONMENT” drop-down. Select "Injected Web3" (make sure Metamask is loaded) and click "Deploy" button. 
 
@@ -810,7 +809,7 @@ export default function WithdrawComponent(props) {
 
 Now move out of the `components` directory using the following command:
 ```bash
-cd ../
+cd ..
 ```
 
 Under the `src` directory now create a new file called `styles.css` and paste the following code: 
@@ -1233,7 +1232,7 @@ All the constants used in the application will be stored in an file named `const
 
 ```javascript
 export const PRECISION = 1000000;
-export const RE = /^[0-9]*[.]?[0-9]*$/;
+export const RE = /^[0-9]*[.]?[0-9]{0,6}$/;
 export const CONTRACT_ADDRESS = /*PASTE THE CONTRACT ADDRESS HERE*/;
 export const abi = /*PASTE THE CONTRACT ABI*/; 
 ```
@@ -1243,8 +1242,8 @@ Note that you have to store the contract address and the abi you copied from rem
 ```javascript
 
 export const PRECISION = 1000000;
-export const RE = /^[0-9]*[.]?[0-9]*$/;
-export const CONTRACT_ADDRESS = "0x1DDb0A76b0A9e036D9f5fA38d1f805A501E50324";
+export const RE = /^[0-9]*[.]?[0-9]{0,6}$/;
+export const CONTRACT_ADDRESS = "0x806D6B235C33c6B5b82EcD3B11509eFeC61BF643";
 export const abi = [
 	{
 		"inputs": [
