@@ -20,7 +20,7 @@ Different AMMs use different formulas according to the specific use cases they t
 
 # Implementing the smart contract
 
-Lets start with the boilerplate code. We create a contract named `AMM` and use the SafeMath library while performing mathematical operations.  
+Let's start with the boilerplate code. We create a contract named `AMM` and import the SafeMath library to perform mathematical operations with proper checks.  
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -33,7 +33,7 @@ contract AMM {
 }
 ```
 
-Next we define the state variables needed to operate the AMM. We will be using the same mathematical formula as used by Uniswap to determine the price of the assets (`K = totalToken1 * totalToken2`). For simplicity purpose, We are maintaining our own internal balance mapping (token1Balance & token2Balance) instead of dealing with the ERC-20 tokens. As solidity doesn't support float numbers, We will reserve the first six digits of an integer value to represent decimal value after the dot. This is achieved by scaling the numbers by a factor of 10^6 (PRECISION).
+Next, we define the state variables needed to operate the AMM. We will be using the same mathematical formula as used by Uniswap to determine the price of the assets (`K = totalToken1 * totalToken2`). For simplicity purposes, We are maintaining our own internal balance mapping (token1Balance & token2Balance) instead of dealing with the ERC-20 tokens. As solidity doesn't support float numbers, We will reserve the first six digits of an integer value to represent the decimal value after the dot. This is achieved by scaling the numbers by a factor of 10^6 (PRECISION).
 
 ```solidity
 uint256 totalShares;  // Stores the total amount of share issued for the pool
@@ -82,7 +82,7 @@ function getPoolDetails() external view returns(uint256, uint256, uint256) {
 }
 ```
 
-As we are not using the ERC-20 tokens and instead maintaining record of the balance ourselves; we need a way to allocate tokens to the new users so that they can interact with the dApp. User can call the faucet function to get some tokens to play with!
+As we are not using the ERC-20 tokens and instead, maintaining a record of the balance ourselves; we need a way to allocate tokens to the new users so that they can interact with the dApp. Users can call the faucet function to get some tokens to play with!
 
 ```solidity
 // Sends free token(s) to the invoker
@@ -96,7 +96,7 @@ Now we will start implementing the three core functionalities - Provide, Withdra
 
 ## Provide
 
-`provide` function takes two parameters - amount of token1 & amount of token2 that the user wants to lock in the pool. If the pool is initially empty then the equivalence rate is set as `_amountToken1 : _amountToken2` and the user is issued 100 shares for it. Otherwise first it is checked whether the two amount provided by the user have equivalent value or not. This is done by checking if the two amount are in equal proportion with respect to the total number of their respective token locked in the pool i.e. `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` should hold true.
+`provide` function takes two parameters - amount of token1 & amount of token2 that the user wants to lock in the pool. If the pool is initially empty then the equivalence rate is set as `_amountToken1 : _amountToken2` and the user is issued 100 shares for it. Otherwise, it is checked whether the two amounts provided by the user have equivalent value or not. This is done by checking if the two amounts are in equal proportion to the total number of their respective token locked in the pool i.e. `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` should hold.
 
 ```solidity
 // Adding new liquidity in the pool
@@ -123,11 +123,12 @@ function provide(uint256 _amountToken1, uint256 _amountToken2) external validAmo
     shares[msg.sender] += share;
 }
 ```
+
 {% hint style="danger" %}
-Carefully notice the order of balance update we are performing in the above function. We are first deducting the tokens from the users' account and in the very last step, we are updating her share balance. This is done to prevent reentrancy attack.
+Carefully notice the order of balance update we are performing in the above function. We are first deducting the tokens from the users' account and in the very last step, we are updating her share balance. This is done to prevent a reentrancy attack.
 {% endhint %}
 
-The given functions help the user get an estimate of the amount of other token that they need to lock with respect to the given token amount. Here again we use the proportion `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` to determine the amount of token1 required if we wish to lock given amount of token2 and vice-versa.
+The given functions help the user get an estimate of the amount of other token that they need to lock for the given token amount. Here again, we use the proportion `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` to determine the amount of token1 required if we wish to lock given amount of token2 and vice-versa.
 
 ```solidity
 // Returns amount of Token1 required when providing liquidity with _amountToken2 quantity of Token2
@@ -143,7 +144,7 @@ function getEquivalentToken2Estimate(uint256 _amountToken1) public view activePo
 
 ## Withdraw
 
-Withdraw is the opposite of provide and when a user wishes to burn a given amount of share. Token1 and Token2 are released from the pool in proportion to the share burned with respect to total shares issued i.e. `share : totalShare :: amountTokenX : totalTokenX`.
+Withdraw is used when a user wishes to burn a given amount of share to get back their tokens. Token1 and Token2 are released from the pool in proportion to the share burned with respect to total shares issued i.e. `share : totalShare :: amountTokenX : totalTokenX`.
 
 ```solidity
 // Returns the estimate of Token1 & Token2 that will be released on burning given _share
@@ -171,9 +172,9 @@ function withdraw(uint256 _share) external activePool validAmountCheck(shares, _
 
 ## Swap
 
-To swap from Token1 to Token2 we will implement three functions - `getSwapToken1Estimate`, `getSwapToken1EstimateGivenToken2` & `swapToken1`. The first two functions only determines the values of swap for estimation purpose while the last one actually does the conversion.
+To swap from Token1 to Token2 we will implement three functions - `getSwapToken1Estimate`, `getSwapToken1EstimateGivenToken2` & `swapToken1`. The first two functions only determine the values of swap for estimation purposes while the last one does the conversion.
 
-`getSwapToken1Estimate` returns the amount of token2 that the user will get when depositing a given amount of token1. The amount of token2 is obtained from the equation `K = totalToken1 * totalToken2` where the `K` should remain same before/after the operation. This gives us `K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)` and we get the value `amountToken2` from solving this equation. In the last line we are ensuring that the pool is never drained completely from either side, which would cause the equation to become undefined.
+`getSwapToken1Estimate` returns the amount of token2 that the user will get when depositing a given amount of token1. The amount of token2 is obtained from the equation `K = totalToken1 * totalToken2` where the `K` should remain the same before/after the operation. This gives us `K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)` and we get the value `amountToken2` from solving this equation. In the last line, we are ensuring that the pool is never drained completely from either side, which would make the equation undefined.
 
 ```solidity
 // Returns the amount of Token2 that the user will get when swapping a given amount of Token1 for Token2
