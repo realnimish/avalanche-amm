@@ -33,7 +33,7 @@ contract AMM {
 }
 ```
 
-Next we define the state variables needed to operate the AMM. For simplicity purpose, We are maintaining our own internal balance mapping (token1Balance & token2Balance) instead of dealing with the ERC-20 tokens. As solidity doesn't support float numbers, We will reserve the first six digits of an integer value to represent decimal value after the dot. This is achieved by scaling the numbers by a factor of 10^6 (PRECISION).
+Next we define the state variables needed to operate the AMM. We will be using the same mathematical formula as used by Uniswap to determine the price of the assets (`K = totalToken1 * totalToken2`). For simplicity purpose, We are maintaining our own internal balance mapping (token1Balance & token2Balance) instead of dealing with the ERC-20 tokens. As solidity doesn't support float numbers, We will reserve the first six digits of an integer value to represent decimal value after the dot. This is achieved by scaling the numbers by a factor of 10^6 (PRECISION).
 
 ```solidity
 uint256 totalShares;  // Stores the total amount of share issued for the pool
@@ -82,13 +82,166 @@ function getPoolDetails() external view returns(uint256, uint256, uint256) {
 }
 ```
 
-As we are not using the ERC-20 tokens and instead maintaining record of the balance ourselves. We need a way to allocate tokens to the new users so that they can interact with the dApp. User can call the faucet function to get some tokens to play with!
+As we are not using the ERC-20 tokens and instead maintaining record of the balance ourselves; we need a way to allocate tokens to the new users so that they can interact with the dApp. User can call the faucet function to get some tokens to play with!
 
 ```solidity
 // Sends free token(s) to the invoker
 function faucet(uint256 _amountToken1, uint256 _amountToken2) external {
     token1Balance[msg.sender] = token1Balance[msg.sender].add(_amountToken1);
     token2Balance[msg.sender] = token2Balance[msg.sender].add(_amountToken2);
+}
+```
+
+Now we will start implementing the three core functionalities - Provide, Withdraw and Swap.
+
+## Provide
+
+`provide` function takes two parameters - amount of token1 & amount of token2 that the user wants to lock in the pool. If the pool is initially empty then the equivalence rate is set as `_amountToken1 : _amountToken2` and the user is issued 100 shares for it. Otherwise first it is checked whether the two amount provided by the user have equivalent value or not. This is done by checking if the two amount are in equal proportion with respect to the total number of their respective token locked in the pool i.e. `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` should hold true.
+
+```solidity
+// Adding new liquidity in the pool
+// Returns the amount of share issued for locking given assets
+function provide(uint256 _amountToken1, uint256 _amountToken2) external validAmountCheck(token1Balance, _amountToken1) validAmountCheck(token2Balance, _amountToken2) returns(uint256 share) {
+    if(totalShares == 0) { // Genesis liquidity is issued 100 Shares
+        share = 100*PRECISION;
+    } else{
+        uint256 share1 = totalShares.mul(_amountToken1).div(totalToken1);
+        uint256 share2 = totalShares.mul(_amountToken2).div(totalToken2);
+        require(share1 == share2, "Equivalent value of tokens not provided...");
+        share = share1;
+    }
+
+    require(share > 0, "Asset value less than threshold for contribution!");
+    token1Balance[msg.sender] -= _amountToken1;
+    token2Balance[msg.sender] -= _amountToken2;
+
+    totalToken1 += _amountToken1;
+    totalToken2 += _amountToken2;
+    K = totalToken1.mul(totalToken2);
+
+    totalShares += share;
+    shares[msg.sender] += share;
+}
+```
+{% hint style="danger" %}
+Carefully notice the order of balance update we are performing in the above function. We are first deducting the tokens from the users' account and in the very last step, we are updating her share balance. This is done to prevent reentrancy attack.
+{% endhint %}
+
+The given functions help the user get an estimate of the amount of other token that they need to lock with respect to the given token amount. Here again we use the proportion `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` to determine the amount of token1 required if we wish to lock given amount of token2 and vice-versa.
+
+```solidity
+// Returns amount of Token1 required when providing liquidity with _amountToken2 quantity of Token2
+function getEquivalentToken1Estimate(uint256 _amountToken2) public view activePool returns(uint256 reqToken1) {
+    reqToken1 = totalToken1.mul(_amountToken2).div(totalToken2);
+}
+
+// Returns amount of Token2 required when providing liquidity with _amountToken1 quantity of Token1
+function getEquivalentToken2Estimate(uint256 _amountToken1) public view activePool returns(uint256 reqToken2) {
+    reqToken2 = totalToken2.mul(_amountToken1).div(totalToken1);
+}
+```
+
+## Withdraw
+
+Withdraw is the opposite of provide and when a user wishes to burn a given amount of share. Token1 and Token2 are released from the pool in proportion to the share burned with respect to total shares issued i.e. `share : totalShare :: amountTokenX : totalTokenX`.
+
+```solidity
+// Returns the estimate of Token1 & Token2 that will be released on burning given _share
+function getWithdrawEstimate(uint256 _share) public view activePool returns(uint256 amountToken1, uint256 amountToken2) {
+    require(_share <= totalShares, "Share should be less than totalShare");
+    amountToken1 = _share.mul(totalToken1).div(totalShares);
+    amountToken2 = _share.mul(totalToken2).div(totalShares);
+}
+
+// Removes liquidity from the pool and releases corresponding Token1 & Token2 to the withdrawer
+function withdraw(uint256 _share) external activePool validAmountCheck(shares, _share) returns(uint256 amountToken1, uint256 amountToken2) {
+    (amountToken1, amountToken2) = getWithdrawEstimate(_share);
+    
+    shares[msg.sender] -= _share;
+    totalShares -= _share;
+
+    totalToken1 -= amountToken1;
+    totalToken2 -= amountToken2;
+    K = totalToken1.mul(totalToken2);
+
+    token1Balance[msg.sender] += amountToken1;
+    token2Balance[msg.sender] += amountToken2;
+}
+```
+
+## Swap
+
+To swap from Token1 to Token2 we will implement three functions - `getSwapToken1Estimate`, `getSwapToken1EstimateGivenToken2` & `swapToken1`. The first two functions only determines the values of swap for estimation purpose while the last one actually does the conversion.
+
+`getSwapToken1Estimate` returns the amount of token2 that the user will get when depositing a given amount of token1. The amount of token2 is obtained from the equation `K = totalToken1 * totalToken2` where the `K` should remain same before/after the operation. This gives us `K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)` and we get the value `amountToken2` from solving this equation. In the last line we are ensuring that the pool is never drained completely from either side, which would cause the equation to become undefined.
+
+```solidity
+// Returns the amount of Token2 that the user will get when swapping a given amount of Token1 for Token2
+function getSwapToken1Estimate(uint256 _amountToken1) public view activePool returns(uint256 amountToken2) {
+    uint256 token1After = totalToken1.add(_amountToken1);
+    uint256 token2After = K.div(token1After);
+    amountToken2 = totalToken2.sub(token2After);
+
+    // To ensure that Token2's pool is not completely depleted leading to inf:0 ratio
+    if(amountToken2 == totalToken2) amountToken2--;
+}
+```
+
+`getSwapToken1EstimateGivenToken2` returns the amount of token1 that the user should deposit to get a given amount of token2. Amount of token1 is similarly obtained by solving the following equation `K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)`.
+
+```solidity
+// Returns the amount of Token1 that the user should swap to get _amountToken2 in return
+function getSwapToken1EstimateGivenToken2(uint256 _amountToken2) public view activePool returns(uint256 amountToken1) {
+    require(_amountToken2 < totalToken2, "Insufficient pool balance");
+    uint256 token2After = totalToken2.sub(_amountToken2);
+    uint256 token1After = K.div(token2After);
+    amountToken1 = token1After.sub(totalToken1);
+}
+```
+
+`swapToken1` actually swaps the amount instead of just giving an estimate.
+
+```solidity
+// Swaps given amount of Token1 to Token2 using algorithmic price determination
+function swapToken1(uint256 _amountToken1) external activePool validAmountCheck(token1Balance, _amountToken1) returns(uint256 amountToken2) {
+    amountToken2 = getSwapToken1Estimate(_amountToken1);
+
+    token1Balance[msg.sender] -= _amountToken1;
+    totalToken1 += _amountToken1;
+    totalToken2 -= amountToken2;
+    token2Balance[msg.sender] += amountToken2;
+}
+```
+
+Similarly for Token2 to Token1 swap we implement the three functions - `getSwapToken2Estimate`, `getSwapToken2EstimateGivenToken1` & `swapToken2` as below.
+
+```solidity
+// Returns the amount of Token2 that the user will get when swapping a given amount of Token1 for Token2
+function getSwapToken2Estimate(uint256 _amountToken2) public view activePool returns(uint256 amountToken1) {
+    uint256 token2After = totalToken2.add(_amountToken2);
+    uint256 token1After = K.div(token2After);
+    amountToken1 = totalToken1.sub(token1After);
+
+    // To ensure that Token1's pool is not completely depleted leading to inf:0 ratio
+    if(amountToken1 == totalToken1) amountToken1--;
+}
+
+// Returns the amount of Token2 that the user should swap to get _amountToken1 in return
+function getSwapToken2EstimateGivenToken1(uint256 _amountToken1) public view activePool returns(uint256 amountToken2) {
+    require(_amountToken1 < totalToken1, "Insufficient pool balance");
+    uint256 token1After = totalToken1.sub(_amountToken1);
+    uint256 token2After = K.div(token1After);
+    amountToken2 = token2After.sub(totalToken2);
+}
+
+// Swaps given amount of Token2 to Token1 using algorithmic price determination
+function swapToken2(uint256 _amountToken2) external activePool validAmountCheck(token2Balance, _amountToken2) returns(uint256 amountToken1) {
+    amountToken1 = getSwapToken2Estimate(_amountToken2);
+
+    token2Balance[msg.sender] -= _amountToken2;
+    totalToken2 += _amountToken2;
+    totalToken1 -= amountToken1;
+    token1Balance[msg.sender] += amountToken1;
 }
 ```
 
@@ -191,7 +344,7 @@ contract AMM {
             uint256 share1 = totalShares.mul(_amountToken1).div(totalToken1);
             uint256 share2 = totalShares.mul(_amountToken2).div(totalToken2);
             require(share1 == share2, "Equivalent value of tokens not provided...");
-               share = share1;
+            share = share1;
         }
 
         require(share > 0, "Asset value less than threshold for contribution!");
