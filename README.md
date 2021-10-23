@@ -124,8 +124,8 @@ function provide(uint256 _amountToken1, uint256 _amountToken2) external validAmo
 }
 ```
 
-{% hint style="danger" %}
-Carefully notice the order of balance update we are performing in the above function. We are first deducting the tokens from the users' account and in the very last step, we are updating her share balance. This is done to prevent a reentrancy attack.
+{% hint style="danger" %}  
+Carefully notice the order of balance update we are performing in the above function. We are first deducting the tokens from the users' account and in the very last step, we are updating her share balance. This is done to prevent a reentrancy attack.  
 {% endhint %}
 
 The given functions help the user get an estimate of the amount of other token that they need to lock for the given token amount. Here again, we use the proportion `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` to determine the amount of token1 required if we wish to lock given amount of token2 and vice-versa.
@@ -245,6 +245,8 @@ function swapToken2(uint256 _amountToken2) external activePool validAmountCheck(
     token1Balance[msg.sender] += amountToken1;
 }
 ```
+
+This completes the smart contract implementation part. Now we will deploy it on the Fuji C-Chain tesnet.
 
 # Deploying the smart contract
 
@@ -1779,7 +1781,7 @@ npm start
 
 * Getting funds from the faucet to interact with the AMM
 
-![preview]()
+![preview](https://i.imgur.com/d85v4K5.mp4)
 
 * Adding liquidity in the pool 
 
