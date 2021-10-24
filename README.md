@@ -1779,21 +1779,8 @@ npm start
 
 * Visit [http://localhost:3000](http://localhost:3000) to interact with the AMM.
 
-* Getting funds from the faucet to interact with the AMM
+[![]()](demo.mp4 "Link Title")
 
-![preview](https://i.imgur.com/d85v4K5.mp4)
-
-* Adding liquidity in the pool 
-
-![preview]()
-
-* Swapping tokens
-
-![preview]()
-
-* Withdrawing liquidity from the pool 
-
-![preview]()
 
 # Conclusion
 Congratulations! We have successfully developed a working AMM model where users can swap tokens, provide & withdraw liquidity. As a next step, you can play around with the price formula, integrate the ERC20 standard, introduce fees as an incentive mechanism for providers or add slippage protection, and much more...
