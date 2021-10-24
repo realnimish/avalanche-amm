@@ -1779,7 +1779,7 @@ npm start
 
 * Visit [http://localhost:3000](http://localhost:3000) to interact with the AMM.
 
-[![]()](demo.mp4 "Link Title")
+[![DEMO]()](demo.mp4)
 
 
 # Conclusion
