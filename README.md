@@ -1,12 +1,6 @@
-# Create an AMM on Avalanche
-
 # Introduction
 
-AMM is a type of decentralized exchange which is based on a mathematical formula of price assets. It allows digital assets to be traded without any permissions and automatically by using liquidity pools instead of any traditional buyers and sellers which uses an order book that was used in traditional exchange, here assets are priced according to a pricing algorithm. 
-
-For example, Uniswap uses p * q = k, where p is the amount of one token in the liquidity pool, and q is the amount of the other. Here “k” is a fixed constant which means the pool’s total liquidity always has to remain the same. For further explanation let us take an example if an AMM has coin A and Coin B, two volatile assets, every time A is bought, the price of A goes up as there is less A in the pool than before the purchase. Conversely, the price of B goes down as there is more B in the pool. The pool stays in constant balance, where the total value of A in the pool will always equal the total value of B in the pool. The size will expand only when new liquidity providers join the pool.
-
-Different AMMs use different formulas according to the specific use cases they target and the similarity between all of them is that they determine the prices algorithmically. In this tutorial, we will learn how to build a very basic AMM having features namely Provide, Withdraw & Swap with no incentive mechanism like trading fees. Also, we will not deal with ERC20 tokens; instead we will maintain our own mapping storing the balance of the accounts to keep things simple!
+In this tutorial, we will learn how to build a very basic AMM having features namely Provide, Withdraw & Swap with no incentive mechanism like trading fees. Also, we will not deal with ERC20 tokens instead, we will maintain our own mapping storing the balance of the accounts to keep things simple! We will build the smart contract in Solidity and the frontend of our application with the help of ReactJS.
 
 # Prerequisites
 
@@ -18,9 +12,15 @@ Different AMMs use different formulas according to the specific use cases they t
 * [Node.js](https://nodejs.org/en/download/releases/) v10.18.0+
 * [Metamask extension](https://metamask.io/download.html) on your browser
 
+# What's an AMM?
+
+Automated Market Maker(AMM) is a type of decentralized exchange which is based on a mathematical formula of price assets. It allows digital assets to be traded without any permissions and automatically by using liquidity pools instead of any traditional buyers and sellers which uses an order book that was used in traditional exchange, here assets are priced according to a pricing algorithm. 
+
+For example, Uniswap uses p * q = k, where p is the amount of one token in the liquidity pool, and q is the amount of the other. Here “k” is a fixed constant which means the pool’s total liquidity always has to remain the same. For further explanation let us take an example if an AMM has coin A and Coin B, two volatile assets, every time A is bought, the price of A goes up as there is less A in the pool than before the purchase. Conversely, the price of B goes down as there is more B in the pool. The pool stays in constant balance, where the total value of A in the pool will always equal the total value of B in the pool. The size will expand only when new liquidity providers join the pool.
+
 # Implementing the smart contract
 
-Let's start with the boilerplate code. We create a contract named `AMM` and import the SafeMath library to perform mathematical operations with proper checks.  
+Let's start with the boilerplate code. We create a contract named `AMM` and import the SafeMath library from OpenZeppelin to perform mathematical operations with proper checks.
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -33,7 +33,7 @@ contract AMM {
 }
 ```
 
-Next, we define the state variables needed to operate the AMM. We will be using the same mathematical formula as used by Uniswap to determine the price of the assets (`K = totalToken1 * totalToken2`). For simplicity purposes, We are maintaining our own internal balance mapping (token1Balance & token2Balance) instead of dealing with the ERC-20 tokens. As solidity doesn't support float numbers, We will reserve the first six digits of an integer value to represent the decimal value after the dot. This is achieved by scaling the numbers by a factor of 10^6 (PRECISION).
+Next, we define the state variables needed to operate the AMM. We will be using the same mathematical formula as used by Uniswap to determine the price of the assets (**K = totalToken1 * totalToken2**). For simplicity purposes, We are maintaining our own internal balance mapping (token1Balance & token2Balance) instead of dealing with the ERC-20 tokens. As Solidity doesn't support floating-point numbers, we will reserve the first six digits of an integer value to represent the decimal value after the dot. This is achieved by scaling the numbers by a factor of 10^6 (PRECISION).
 
 ```solidity
 uint256 totalShares;  // Stores the total amount of share issued for the pool
@@ -96,7 +96,7 @@ Now we will start implementing the three core functionalities - Provide, Withdra
 
 ## Provide
 
-`provide` function takes two parameters - amount of token1 & amount of token2 that the user wants to lock in the pool. If the pool is initially empty then the equivalence rate is set as `_amountToken1 : _amountToken2` and the user is issued 100 shares for it. Otherwise, it is checked whether the two amounts provided by the user have equivalent value or not. This is done by checking if the two amounts are in equal proportion to the total number of their respective token locked in the pool i.e. `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` should hold.
+`provide` function takes two parameters - amount of token1 & amount of token2 that the user wants to lock in the pool. If the pool is initially empty then the equivalence rate is set as **_amountToken1 : _amountToken2** and the user is issued 100 shares for it. Otherwise, it is checked whether the two amounts provided by the user have equivalent value or not. This is done by checking if the two amounts are in equal proportion to the total number of their respective token locked in the pool i.e. **_amountToken1 : totalToken1 :: _amountToken2 : totalToken2** should hold.
 
 ```solidity
 // Adding new liquidity in the pool
@@ -128,7 +128,7 @@ function provide(uint256 _amountToken1, uint256 _amountToken2) external validAmo
 Carefully notice the order of balance update we are performing in the above function. We are first deducting the tokens from the users' account and in the very last step, we are updating her share balance. This is done to prevent a reentrancy attack.  
 {% endhint %}
 
-The given functions help the user get an estimate of the amount of other token that they need to lock for the given token amount. Here again, we use the proportion `_amountToken1 : totalToken1 :: _amountToken2 : totalToken2` to determine the amount of token1 required if we wish to lock given amount of token2 and vice-versa.
+The given functions help the user get an estimate of the amount of the second token that they need to lock for the given token amount. Here again, we use the proportion **_amountToken1 : totalToken1 :: _amountToken2 : totalToken2** to determine the amount of token1 required if we wish to lock given amount of token2 and vice-versa.
 
 ```solidity
 // Returns amount of Token1 required when providing liquidity with _amountToken2 quantity of Token2
@@ -144,7 +144,7 @@ function getEquivalentToken2Estimate(uint256 _amountToken1) public view activePo
 
 ## Withdraw
 
-Withdraw is used when a user wishes to burn a given amount of share to get back their tokens. Token1 and Token2 are released from the pool in proportion to the share burned with respect to total shares issued i.e. `share : totalShare :: amountTokenX : totalTokenX`.
+Withdraw is used when a user wishes to burn a given amount of share to get back their tokens. Token1 and Token2 are released from the pool in proportion to the share burned with respect to total shares issued i.e. **share : totalShare :: amountTokenX : totalTokenX**.
 
 ```solidity
 // Returns the estimate of Token1 & Token2 that will be released on burning given _share
@@ -174,7 +174,7 @@ function withdraw(uint256 _share) external activePool validAmountCheck(shares, _
 
 To swap from Token1 to Token2 we will implement three functions - `getSwapToken1Estimate`, `getSwapToken1EstimateGivenToken2` & `swapToken1`. The first two functions only determine the values of swap for estimation purposes while the last one does the conversion.
 
-`getSwapToken1Estimate` returns the amount of token2 that the user will get when depositing a given amount of token1. The amount of token2 is obtained from the equation `K = totalToken1 * totalToken2` where the `K` should remain the same before/after the operation. This gives us `K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)` and we get the value `amountToken2` from solving this equation. In the last line, we are ensuring that the pool is never drained completely from either side, which would make the equation undefined.
+`getSwapToken1Estimate` returns the amount of token2 that the user will get when depositing a given amount of token1. The amount of token2 is obtained from the equation **K = totalToken1 * totalToken2** where the **K** should remain the same before/after the operation. This gives us **K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)** and we get the value `amountToken2` from solving this equation. In the last line, we are ensuring that the pool is never drained completely from either side, which would make the equation undefined.
 
 ```solidity
 // Returns the amount of Token2 that the user will get when swapping a given amount of Token1 for Token2
@@ -188,7 +188,7 @@ function getSwapToken1Estimate(uint256 _amountToken1) public view activePool ret
 }
 ```
 
-`getSwapToken1EstimateGivenToken2` returns the amount of token1 that the user should deposit to get a given amount of token2. Amount of token1 is similarly obtained by solving the following equation `K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)`.
+`getSwapToken1EstimateGivenToken2` returns the amount of token1 that the user should deposit to get a given amount of token2. Amount of token1 is similarly obtained by solving the following equation **K = (totalToken1 + amountToken1) * (totalToken2 - amountToken2)**.
 
 ```solidity
 // Returns the amount of Token1 that the user should swap to get _amountToken2 in return
@@ -246,7 +246,7 @@ function swapToken2(uint256 _amountToken2) external activePool validAmountCheck(
 }
 ```
 
-This completes the smart contract implementation part. Now we will deploy it on the Fuji C-Chain tesnet.
+This completes the smart contract implementation part. Now we will deploy it on the Fuji C-Chain testnet.
 
 # Deploying the smart contract
 
@@ -254,7 +254,7 @@ This completes the smart contract implementation part. Now we will deploy it on 
 
 Log in to MetaMask -> Click the Network drop-down -> Select Custom RPC
 
-![Metamask](https://gblobscdn.gitbook.com/assets%2F-MIVL6JKxnpiaciltfue%2F-MM1OJt2er1kalefd4bd%2F-MM1PMHVK808DUpeSuF4%2Fimage.png?alt=media&token=9b5898f1-57e0-4334-b40c-b18005e3be0e)
+![Metamask](../../../.gitbook/assets/create-an-amm-on-avalanche_metamask.png)
 
 **FUJI Testnet Settings:**
 
@@ -270,9 +270,9 @@ Fund your address from the given [faucet](https://faucet.avax-test.network/).
 
 Open [Remix](https://remix.ethereum.org/) -> Select Solidity
 
-![remix-preview](https://gblobscdn.gitbook.com/assets%2F-MKmFQYgp3Usx3i-VLJU%2F-MLOuR33iyanZrmnCDTl%2F-MLOw5RJ5tNGvy2C90xN%2Fimage.png?alt=media&token=391f3978-7d53-4112-b45a-e89c3d6d783d)
+![remix-preview](../../../.gitbook/assets/create-an-amm-on-avalanche_remix.png)
 
-Create an `AMM.sol` file in the Remix file explorer, and paste the following code :
+Create an `AMM.sol` file in the Remix file explorer, and paste the following code:
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -446,1332 +446,51 @@ Navigate to the Solidity compiler Tab on the left side navigation bar and click 
 
 Navigate to Deploy Tab and open the “ENVIRONMENT” drop-down. Select "Injected Web3" (make sure Metamask is loaded) and click the "Deploy" button. 
 
-Approve the transaction on Metamask pop-up interface. Once our contract is deployed successfully, Note down the `contract address`.
+Approve the transaction on Metamask pop-up interface. Once our contract is deployed successfully, make note of the `contract address`.
 
 {% hint style="info" %}  
 An Application Binary Interface (ABI) is a JSON object which stores the metadata about the methods of a contract like data type of input parameters, return data type & property of the method like payable, view, pure, etc. You can learn more about the ABI from the [solidity documentation](https://docs.soliditylang.org/en/latest/abi-spec.html)  
 {% endhint %}
 
 # Creating a frontend in React
-Now, we are going to create a react app and set up the frontend of the application. In the frontend, we represent token1 and token2 as KAR and KOTHI.
+Now, we are going to create a react app and set up the front-end of the application. In the frontend, we represent token1 and token2 as KAR and KOTHI respectively.
 
 Open a terminal and navigate to the directory where we will create the application.
-```bash
+
+```text
 cd /path/to/directory
 ```
 
-Create a new react app.
-```bash
-npx create-react-app avalanche-amm
-```
+Now clone the github repository, move into the newly `avalance-amm` directory and install all the dependencies.
 
-Move to the newly created directory and install the given dependencies.
-```bash
+```text
+git clone https://github.com/SayanKar/avalanche-amm.git
 cd avalanche-amm
-npm install --save ethers@5.4.7 react-icons@4.3.1
+npm install
 ```
 
-Create a new directory `components` inside the `src` directory, where we will be keeping all our React components, using the following command :
-```bash
-mkdir ./src/components
-cd ./src/components
-```
+In our react application we keep all the React components in the `src/components` directory.
 
-Now lets create the most reused component which takes user-input for our dApp. Create a new file called `BoxTemplate.jsx` and paste the following code : 
-```javascript
-import "../styles.css";
-import { RE } from "../constants";
+* **BoxTemplate** :- 
+It renders the box containing the input field, its header, and the element on the right of the box, which can be a token name, a button, or is empty.
 
-export default function BoxTemplate(props) {
-    const onInputChange = (e) => {
-        if (e.target.value === "" || RE.test(e.target.value)) {
-            props.onChange(e);
-        }
-    };
-    return (
-        <div className="boxTemplate">
-            <div className="boxBody">
-                <div>
-                    <p className="leftHeader"> {props.leftHeader} </p>
-                    <input
-                        className="textField"
-                        value={props.value}
-                        onChange={(e) => onInputChange(e)}
-                        placeholder={"Enter amount"}
-                    />
-                </div>
-                <div className="rightContent">{props.right}</div>
-            </div>
-        </div>
-    );
-}
-```
+* **FaucetComponent** :-
+ Takes amount of token1 (KAR) and token2 (KOTHI) as input and funds the user address with that much amount.
 
-Lets create the component which will contain and control the other component. Create a new file called `ContainerComponent.jsx` and paste the following code:
-```javascript
-import { useEffect, useState } from "react";
-import "../styles.css";
-import SwapComponent from "./SwapComponent";
-import ProvideComponent from "./ProvideComponent";
-import WithdrawComponent from "./WithdrawComponent";
-import FaucetComponent from "./FaucetComponent";
-import { PRECISION } from "../constants";
+* **ProvideComponent** :-
+Takes amount of one token (KAR or KOTHI) fills in the estimated amount of the other token and helps provide liquidity to the pool.
 
-export default function ContainerComponent(props) {
-    const [activeTab, setActiveTab] = useState("Swap");
-    const [amountOfKAR, setAmountOfKAR] = useState(0);
-    const [amountOfKOTHI, setAmountOfKOTHI] = useState(0);
-    const [amountOfShare, setAmountOfShare] = useState(0);
-    const [totalKAR, setTotalKAR] = useState(0);
-    const [totalKOTHI, setTotalKOTHI] = useState(0);
-    const [totalShare, setTotalShare] = useState(0);
+* **SwapComponent** :- 
+Helps swap a token to another. It takes the amount of token in input field *From* and estimates the amount of token in input field *To* and vise versa.
 
-    useEffect(() => {
-        getHoldings();
-    });
+* **WithdrawComponent** :-
+Helps withdraw the share one has. Also enables to withdraw to his maximum limit.
 
-    //fetch the pool details and personal assets details.
-    async function getHoldings() {
-        try {
-            console.log("Fetching holdings----");
-            let response = await props.contract.getMyHoldings();
-            setAmountOfKAR(response.amountToken1 / PRECISION);
-            setAmountOfKOTHI(response.amountToken2 / PRECISION);
-            setAmountOfShare(response.myShare / PRECISION);
-
-            response = await props.contract.getPoolDetails();
-            setTotalKAR(response[0] / PRECISION);
-            setTotalKOTHI(response[1] / PRECISION);
-            setTotalShare(response[2] / PRECISION);
-        } catch (err) {
-            console.log("Couldn't Fetch holdings", err);
-        }
-    }
-
-    const changeTab = (tab) => {
-        setActiveTab(tab);
-    };
-
-    return (
-        <div className="centerBody">
-            <div className="centerContainer">
-                <div className="selectTab">
-                    <div
-                        className={"tabStyle " + (activeTab === "Swap" ? "activeTab" : "")}
-                        onClick={() => changeTab("Swap")}
-                    >
-                        Swap
-                    </div>
-                    <div
-                        className={
-                            "tabStyle " + (activeTab === "Provide" ? "activeTab" : "")
-                        }
-                        onClick={() => changeTab("Provide")}
-                    >
-                        Provide
-                    </div>
-                    <div
-                        className={
-                            "tabStyle " + (activeTab === "Withdraw" ? "activeTab" : "")
-                        }
-                        onClick={() => changeTab("Withdraw")}
-                    >
-                        Withdraw
-                    </div>
-                    <div
-                        className={
-                            "tabStyle " + (activeTab === "Faucet" ? "activeTab" : "")
-                        }
-                        onClick={() => changeTab("Faucet")}
-                    >
-                        Faucet
-                    </div>
-                </div>
-
-                {activeTab === "Swap" && (
-                    <SwapComponent
-                        contract={props.contract}
-                        getHoldings={() => getHoldings()}
-                    />
-                )}
-                {activeTab === "Provide" && (
-                    <ProvideComponent
-                        contract={props.contract}
-                        getHoldings={() => getHoldings()}
-                    />
-                )}
-                {activeTab === "Withdraw" && (
-                    <WithdrawComponent
-                        contract={props.contract}
-                        maxShare={amountOfShare}
-                        getHoldings={() => getHoldings()}
-                    />
-                )}
-                {activeTab === "Faucet" && (
-                    <FaucetComponent
-                        contract={props.contract}
-                        getHoldings={() => getHoldings()}
-                    />
-                )}
-            </div>
-            <div className="details">
-                <div className="detailsBody">
-                    <div className="detailsHeader">Details</div>
-                    <div className="detailsRow">
-                        <div className="detailsAttribute">Amount of KAR:</div>
-                        <div className="detailsValue">{amountOfKAR}</div>
-                    </div>
-                    <div className="detailsRow">
-                        <div className="detailsAttribute">Amount of KOTHI:</div>
-                        <div className="detailsValue">{amountOfKOTHI}</div>
-                    </div>
-                    <div className="detailsRow">
-                        <div className="detailsAttribute">Your Share:</div>
-                        <div className="detailsValue">{amountOfShare}</div>
-                    </div>
-                    <div className="detailsHeader">Pool Details</div>
-                    <div className="detailsRow">
-                        <div className="detailsAttribute">Total KAR:</div>
-                        <div className="detailsValue">{totalKAR}</div>
-                    </div>
-                    <div className="detailsRow">
-                        <div className="detailsAttribute">Total KOTHI:</div>
-                        <div className="detailsValue">{totalKOTHI}</div>
-                    </div>
-                    <div className="detailsRow">
-                        <div className="detailsAttribute">Total Shares:</div>
-                        <div className="detailsValue">{totalShare}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-```
-
-Next we create the faucet component which helps to fund an account with the desired amount of KAR and KOTHI. Create a new file called `FaucetComponent.jsx` and paste the following code: 
-```javascript
-import { useState } from "react";
-import "../styles.css";
-import BoxTemplate from "./BoxTemplate";
-import { PRECISION } from "../constants";
-
-export default function FaucetComponent(props) {
-    const [amountOfKar, setAmountOfKar] = useState(0);
-    const [amountOfKothi, setAmountOfKothi] = useState(0);
-
-    const onChangeAmountOfKothi = (e) => {
-        setAmountOfKothi(e.target.value);
-    };
-
-    const onChangeAmountOfKar = (e) => {
-        setAmountOfKar(e.target.value);
-    };
-
-    async function onClickFund() {
-        if (props.contract === null) {
-            alert("Connect to Metamask");
-            return;
-        }
-        if (["", "."].includes(amountOfKar) || ["", "."].includes(amountOfKothi)) {
-            alert("Amount should be a valid number");
-            return;
-        }
-        try {
-            let response = await props.contract.faucet(
-                amountOfKar * PRECISION,
-                amountOfKothi * PRECISION
-            );
-            let res = await response.wait();
-            console.log("res", res);
-            setAmountOfKar(0);
-            setAmountOfKothi(0);
-            await props.getHoldings();
-            alert("Success");
-        } catch (err) {
-            err?.data?.message && alert(err?.data?.message);
-            console.log(err);
-        }
-    }
-
-    return (
-        <div className="tabBody">
-            <BoxTemplate
-                leftHeader={"Amount of KAR"}
-                right={"KAR"}
-                value={amountOfKar}
-                onChange={(e) => onChangeAmountOfKar(e)}
-            />
-            <BoxTemplate
-                leftHeader={"Amount of KOTHI"}
-                right={"KOTHI"}
-                value={amountOfKothi}
-                onChange={(e) => onChangeAmountOfKothi(e)}
-            />
-            <div className="bottomDiv">
-                <div className="btn" onClick={() => onClickFund()}>
-                    Fund
-                </div>
-            </div>
-        </div>
-    );
-}
-```
-
-Now lets create the provide component which helps to provide liquidity to our AMM. Create a new file called `ProvideComponent.jsx` and paste the following code: 
-```javascript
-import { MdAdd } from "react-icons/md";
-import { useState } from "react";
-import "../styles.css";
-import BoxTemplate from "./BoxTemplate";
-import { PRECISION } from "../constants";
-
-export default function ProvideComponent(props) {
-    const [amountOfKar, setAmountOfKar] = useState(0);
-    const [amountOfKothi, setAmountOfKothi] = useState(0);
-    const [error, setError] = useState("");
-
-    const getProvideEstimate = async (token, value) => {
-        if (["", "."].includes(value)) return;
-        if (props.contract !== null) {
-            try {
-                let estimate;
-                if (token === "KAR") {
-                    estimate = await props.contract.getEquivalentToken2Estimate(
-                        value * PRECISION
-                    );
-                    setAmountOfKothi(estimate / PRECISION);
-                } else {
-                    estimate = await props.contract.getEquivalentToken1Estimate(
-                        value * PRECISION
-                    );
-                    setAmountOfKar(estimate / PRECISION);
-                }
-            } catch (err) {
-                if (err.data.message === "execution reverted: Zero Liquidity") {
-                    setError("Message: Empty pool. Set the initial conversion rate.");
-                } else {
-                    alert(err?.data?.message);
-                }
-            }
-        }
-    };
-
-    const onChangeAmountOfKar = (e) => {
-        setAmountOfKar(e.target.value);
-        getProvideEstimate("KAR", e.target.value);
-    };
-
-    const onChangeAmountOfKothi = (e) => {
-        setAmountOfKothi(e.target.value);
-        getProvideEstimate("KOTHI", e.target.value);
-    };
-
-    const provide = async () => {
-        if (["", "."].includes(amountOfKar) || ["", "."].includes(amountOfKothi)) {
-            alert("Amount should be a valid number");
-            return;
-        }
-        if (props.contract === null) {
-            alert("Connect to Metamask");
-            return;
-        } else {
-            try {
-                let response = await props.contract.provide(
-                    amountOfKar * PRECISION,
-                    amountOfKothi * PRECISION
-                );
-                await response.wait();
-                setAmountOfKar(0);
-                setAmountOfKothi(0);
-                await props.getHoldings();
-                alert("Success");
-                setError("");
-            } catch (err) {
-                err && alert(err?.data?.message);
-            }
-        }
-    };
-
-    return (
-        <div className="tabBody">
-            <BoxTemplate
-                leftHeader={"Amount of KAR"}
-                value={amountOfKar}
-                onChange={(e) => onChangeAmountOfKar(e)}
-            />
-            <div className="swapIcon">
-                <MdAdd />
-            </div>
-            <BoxTemplate
-                leftHeader={"Amount of KOTHI"}
-                value={amountOfKothi}
-                onChange={(e) => onChangeAmountOfKothi(e)}
-            />
-            <div className="error">{error}</div>
-            <div className="bottomDiv">
-                <div className="btn" onClick={() => provide()}>
-                    Provide
-                </div>
-            </div>
-        </div>
-    );
-}
-```
-
-The swap allows to convert one token to another depending on the conversion rate, let's create the component implementing this feature. Create a new file called `SwapComponent.jsx` and paste the following code: 
-
-```javascript
-import { useState } from "react";
-import { MdSwapVert } from "react-icons/md";
-import "../styles.css";
-import BoxTemplate from "./BoxTemplate";
-import { PRECISION } from "../constants";
-
-export default function SwapComponent(props) {
-    const [coin, setCoin] = useState(["KAR", "KOTHI"]);
-    const [amountFrom, setAmountFrom] = useState(0.0);
-    const [amountTo, setAmountTo] = useState(0.0);
-
-    const rev = () => {
-        setCoin([...coin.reverse()]);
-        getSwapEstimateAmountTo(amountFrom);
-    };
-
-    const getSwapEstimateAmountTo = async (val) => {
-        if (["", "."].includes(val)) return;
-        if (props.contract !== null) {
-            try {
-                let estimateOfAmountTo;
-                if (coin[0] === "KAR") {
-                    estimateOfAmountTo = await props.contract.getSwapToken1Estimate(
-                        val * PRECISION
-                    );
-                } else {
-                    estimateOfAmountTo = await props.contract.getSwapToken2Estimate(
-                        val * PRECISION
-                    );
-                }
-                setAmountTo(estimateOfAmountTo / PRECISION);
-            } catch (err) {
-                alert(err?.data?.message);
-            }
-        }
-    };
-
-    const getSwapEstimateAmountFrm = async (val) => {
-        if (["", "."].includes(val)) return;
-        if (props.contract !== null) {
-            try {
-                let estimateOfAmountFrm;
-                if (coin[0] === "KAR") {
-                    estimateOfAmountFrm =
-                        await props.contract.getSwapToken1EstimateGivenToken2(
-                            val * PRECISION
-                        );
-                } else {
-                    estimateOfAmountFrm =
-                        await props.contract.getSwapToken2EstimateGivenToken1(
-                            val * PRECISION
-                        );
-                }
-                setAmountFrom(estimateOfAmountFrm / PRECISION);
-            } catch (err) {
-                alert(err?.data?.message);
-            }
-        }
-    };
-
-    const onChangeAmtFrm = (val) => {
-        setAmountFrom(val.target.value);
-        getSwapEstimateAmountTo(val.target.value);
-    };
-
-    const onChangeAmtTo = (val) => {
-        setAmountTo(val.target.value);
-        getSwapEstimateAmountFrm(val.target.value);
-    };
-
-    const onSwap = async () => {
-        if (["", "."].includes(amountFrom)) {
-            alert("Amount should be a valid number");
-            return;
-        }
-        if (props.contract === null) {
-            alert("Connect to Metamask");
-            return;
-        } else {
-            try {
-                let response;
-                if (coin[0] === "KAR") {
-                    response = await props.contract.swapToken1(amountFrom * PRECISION);
-                } else {
-                    response = await props.contract.swapToken2(amountFrom * PRECISION);
-                }
-                await response.wait();
-                setAmountFrom(0);
-                setAmountTo(0);
-                await props.getHoldings();
-                alert("Success!");
-            } catch (err) {
-                alert(err?.data?.message);
-            }
-        }
-    };
-    return (
-        <div className="tabBody">
-            <BoxTemplate
-                leftHeader={"From"}
-                right={coin[0]}
-                value={amountFrom}
-                onChange={(e) => onChangeAmtFrm(e)}
-            />
-            <div className="swapIcon" onClick={() => rev()}>
-                <MdSwapVert />
-            </div>
-            <BoxTemplate
-                leftHeader={"To"}
-                right={coin[1]}
-                value={amountTo}
-                onChange={(e) => onChangeAmtTo(e)}
-            />
-            <div className="bottomDiv">
-                <div className="btn" onClick={() => onSwap()}>
-                    Swap
-                </div>
-            </div>
-        </div>
-    );
-}
-```
-
-Lets now create the implementing the withdraw feature. Create a new file called `WithdrawComponent.jsx` and paste the following code: 
-```javascript
-import { useState } from "react";
-import "../styles.css";
-import BoxTemplate from "./BoxTemplate";
-import { PRECISION } from "../constants.js";
-
-export default function WithdrawComponent(props) {
-    const [amountOfShare, setAmountOfShare] = useState(0);
-    const [estimateTokens, setEstimateTokens] = useState([]);
-    const onChangeAmountOfShare = async (e) => {
-        setAmountOfShare(e.target.value);
-        if (!["", "."].includes(e.target.value) && props.contract !== null) {
-            try {
-                let response = await props.contract.getWithdrawEstimate(
-                    e.target.value * PRECISION
-                );
-                setEstimateTokens([
-                    response.amountToken1 / PRECISION,
-                    response.amountToken2 / PRECISION,
-                ]);
-            } catch (err) {
-                alert(err?.data?.message);
-            }
-        }
-    };
-    const getMaxShare = async () => {
-        if (props.contract !== null) {
-            setAmountOfShare(props.maxShare);
-            let response = await props.contract.getWithdrawEstimate(
-                props.maxShare * PRECISION
-            );
-            setEstimateTokens([
-                response.amountToken1 / PRECISION,
-                response.amountToken2 / PRECISION,
-            ]);
-        } else alert("Connect to Metamask");
-    };
-
-    const withdrawShare = async () => {
-        if (["", "."].includes(amountOfShare)) {
-            alert("Amount should be a valid number");
-            return;
-        }
-        if (props.maxShare < amountOfShare) {
-            alert("Amount should be less than your max share");
-            return;
-        }
-        if (props.contract === null) {
-            alert("Connect to Metamask");
-            return;
-        } else {
-            try {
-                let response = await props.contract.withdraw(amountOfShare * PRECISION);
-                console.log(response);
-                await response.wait();
-                setAmountOfShare(0);
-                setEstimateTokens([]);
-                await props.getHoldings();
-                alert("Success!");
-            } catch (err) {
-                alert(err?.data?.message);
-            }
-        }
-    };
-    return (
-        <div className="tabBody">
-            <BoxTemplate
-                leftHeader={"Amount:"}
-                right={
-                    <div onClick={() => getMaxShare()} className="getMax">
-                        Max
-                    </div>
-                }
-                value={amountOfShare}
-                onChange={(e) => onChangeAmountOfShare(e)}
-            />
-            {estimateTokens.length > 0 && (
-                <div className="withdrawEstimate">
-                    <div className="amount">Amount of Kar: {estimateTokens[0]}</div>
-                    <div className="amount">Amount of Kothi: {estimateTokens[1]}</div>
-                </div>
-            )}
-            <div className="bottomDiv">
-                <div className="btn" onClick={() => withdrawShare()}>
-                    Withdraw
-                </div>
-            </div>
-        </div>
-    );
-}
-```
-
-Now move out of the `components` directory using the following command:
-```bash
-cd ..
-```
-
-Under the `src` directory now create a new file called `styles.css` and paste the following code: 
-```css
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-        monospace;
-}
-
-html,
-body,
-.pageBody,
-#root {
-    height: 100%;
-    background: linear-gradient(180deg, #242525 0%, #000 180%);
-}
-
-.tabBody {
-    margin: 0px auto;
-    width: 500px;
-    padding-top: 5px;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0px 0px 19px 19px;
-    background-color: #0e0e10;
-    border-top: 0px;
-    margin-right: 0px;
-}
-
-.bottomDiv {
-    margin: 10px auto;
-    width: 30%;
-    padding: 5px;
-    justify-content: center;
-    align-items: center;
-    border-radius: 19px;
-}
-.boxStyle {
-    width: 70%;
-    height: auto;
-    display: flex;
-    justify-content: flex-start;
-    margin: 1px auto;
-    flex-direction: row;
-    border-radius: 19px;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid grey;
-}
-.leftHeader {
-    font-size: 14px;
-}
-
-.getMax {
-    background-color: #242525;
-    border: 1px solid white;
-    border-radius: 19px;
-    height: 30px;
-    width: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-}
-
-.getMax:hover {
-    background-color: #b4b4b4;
-    border: 2px;
-}
-
-.boxTemplate {
-    width: 75%;
-    height: auto;
-    display: flex;
-    margin: 50px auto;
-    padding: 0px 40px 20px 40px;
-    flex-direction: column;
-    border-radius: 19px;
-    position: relative;
-    overflow: hidden;
-    border: 2px solid grey;
-}
-.boxStyle2 {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid grey;
-}
-.selectTab {
-    width: 460px;
-    height: 80px;
-    display: flex;
-    justify-content: space-between;
-    margin: 0px auto;
-    margin-top: 10px;
-    margin-right: 0px;
-    background-color: #0e0e10;
-    border-radius: 19px 19px 0px 0px;
-    padding: 0px 20px 0px 20px;
-}
-.myStyle1 {
-    margin: 10px 30px;
-    width: 30%;
-    padding: 5px;
-    justify-content: center;
-    align-items: center;
-    border-radius: 19px;
-}
-
-.btn {
-    background-color: #242525;
-    margin: 10px 30px;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
-    width: 100px;
-    height: 40px;
-    border-radius: 9px;
-    cursor: pointer;
-}
-
-.textField {
-    width: 70%;
-    height: 30px;
-    font-size: 22px;
-    background-color: #0e0e10;
-    color: white;
-    border: 0px;
-}
-.textField:focus-visible {
-    outline: none;
-}
-
-.boxBody {
-    display: flex;
-    justify-content: space-between;
-    color: white;
-}
-.rightContent {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font: 20px;
-    font-weight: 700;
-}
-.center {
-    text-align: center;
-}
-
-.tabStyle {
-    text-align: center;
-    width: 80px;
-    padding: 5px;
-    font: 18px;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 30px;
-    margin-top: 15px;
-    border-radius: 15px;
-    cursor: pointer;
-}
-
-.tabStyle:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.activeTab {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.swapIcon {
-    width: 5%;
-    text-align: center;
-    display: flex;
-    margin: 40px auto;
-    color: #ff726e;
-}
-
-svg {
-    height: 50px;
-    width: 50px;
-}
-
-.connectBtn {
-    position: absolute;
-    right: 50px;
-    top: 20px;
-    background-color: #ff726e;
-    color: #0e0e10;
-    height: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 10px 5px 10px;
-    border: 1px solid #c8332e;
-    border-radius: 15px;
-}
-
-.connectBtn:hover {
-    color: white;
-    border: 2px solid #c8332e;
-}
-
-.connected {
-    position: absolute;
-    right: 50px;
-    top: 20px;
-    background-color: #4caf50;
-    color: white;
-    height: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 10px 5px 10px;
-    border: 1px solid #2a722c;
-    border-radius: 15px;
-}
-
-.details {
-    padding: 15px 10px 15px 0px;
-    width: 370px;
-    height: fit-content;
-    position: absolute;
-    right: 0px;
-    display: flex;
-    justify-content: center;
-}
-
-.withdrawEstimate {
-    height: 30px;
-    width: 75%;
-    margin: 10px auto;
-    color: white;
-}
-
-.detailsBody {
-    background-color: #0e0e10;
-    width: 90%;
-    padding: 10px;
-    border-radius: 19px;
-}
-
-.detailsHeader {
-    height: 30px;
-    font-size: 20px;
-    font-weight: 600;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    margin-bottom: 15px;
-}
-
-.detailsRow {
-    padding: 0px 25px;
-    height: 35px;
-    display: flex;
-    justify-content: space-around;
-}
-
-.detailsAttribute {
-    font: 18px;
-    font-weight: 600;
-    color: white;
-    display: flex;
-    justify-content: flex-start;
-    width: 50%;
-}
-
-.detailsValue {
-    font: 18px;
-    font-weight: 900;
-    color: white;
-    display: flex;
-    justify-content: center;
-    width: 50%;
-}
-
-.centerBody {
-    display: flex;
-    justify-content: center;
-    height: 100%;
-}
-
-.navBar {
-    height: 80px;
-    background-color: #0e0e10;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    padding: 0px 30px;
-}
-
-.appName {
-    font-size: 28px;
-    font-weight: 800;
-}
-
-.error {
-    color: white;
-    display: flex;
-    justify-content: flex-start;
-    padding: 0px 20px;
-}
-
-@media only screen and (max-width: 1100px) {
-    .centerBody {
-        display: block;
-    }
-    .selectTab {
-        margin: 0px auto;
-        margin-top: 10px;
-    }
-    .tabBody {
-        margin: 0px auto;
-    }
-    .details {
-        position: relative;
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    .detailsBody {
-        width: 500px;
-    }
-    .navBar {
-        justify-content: flex-start;
-    }
-}
-```
-
-Open the file `App.js` and paste the following code block:
-```javascript
-import { ethers } from "ethers";
-import { useState } from "react";
-import { abi, CONTRACT_ADDRESS } from "./constants";
-import ContainerComponent from "./components/ContainerComponent";
-import "./styles.css";
-
-export default function App() {
-    const [myContract, setMyContract] = useState(null);
-    const [address, setAddress] = useState();
-
-    let provider, signer, add;
-
-    async function connect() {
-        let res = await connectToMetamask();
-        if (res === true) {
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            signer = provider.getSigner();
-            add = await signer.getAddress();
-            setAddress(add);
-            try {
-                const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
-                setMyContract(contract);
-            } catch (err) {
-                alert("CONTRACT_ADDRESS not set properly");
-            }
-        } else {
-            alert("Couldn't connect to Metamask");
-        }
-    }
-
-    async function connectToMetamask() {
-        try {
-            await window.ethereum.enable();
-            return true;
-        } catch (err) {
-            return false;
-        }
-    }
-
-    return (
-        <div className="pageBody">
-            <div className="navBar">
-                <div className="appName"> AMM </div>
-                {myContract === null ? (
-                    <div className="connectBtn" onClick={() => connect()}>
-                        {" "}
-                        Connect to Metamask{" "}
-                    </div>
-                ) : (
-                    <div className="connected"> {"Connected to " + address} </div>
-                )}
-            </div>
-            <ContainerComponent contract={myContract} connect={() => connect()} />
-        </div>
-    );
-}
-
-```
-
-Open the file `index.js` and paste the following code block:
-
-```javascript
-import React from "react";
-import ReactDOM from "react-dom";
-import "./styles.css";
-import App from "./App";
-
-ReactDOM.render(<App />, document.getElementById("root"));
-```
-
-All the constants used in the application will be stored in a file named `constants.js`. Create a new file named `constants.js` and paste the following code:
-
-```javascript
-export const PRECISION = 1000000;
-export const RE = /^[0-9]*[.]?[0-9]{0,6}$/;
-export const CONTRACT_ADDRESS = /*PASTE THE CONTRACT ADDRESS HERE*/;
-export const abi = /*PASTE THE CONTRACT ABI*/; 
-```
-
-Note that you have to store the contract address and the ABI you copied from remix in this file in the variables named `CONTRACT_ADDRESS` and `abi` respectively. The `constants.js` file should look like this!
-
-```javascript
-
-export const PRECISION = 1000000;
-export const RE = /^[0-9]*[.]?[0-9]{0,6}$/;
-export const CONTRACT_ADDRESS = "0x806D6B235C33c6B5b82EcD3B11509eFeC61BF643";
-export const abi = [
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken1",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "name": "faucet",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken1",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "name": "provide",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "share",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken1",
-                "type": "uint256"
-            }
-        ],
-        "name": "swapToken1",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "name": "swapToken2",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken1",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_share",
-                "type": "uint256"
-            }
-        ],
-        "name": "withdraw",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken1",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "name": "getEquivalentToken1Estimate",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "reqToken1",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken1",
-                "type": "uint256"
-            }
-        ],
-        "name": "getEquivalentToken2Estimate",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "reqToken2",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "getMyHoldings",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken1",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amountToken2",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "myShare",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "getPoolDetails",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken1",
-                "type": "uint256"
-            }
-        ],
-        "name": "getSwapToken1Estimate",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "name": "getSwapToken1EstimateGivenToken2",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken1",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "name": "getSwapToken2Estimate",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken1",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amountToken1",
-                "type": "uint256"
-            }
-        ],
-        "name": "getSwapToken2EstimateGivenToken1",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_share",
-                "type": "uint256"
-            }
-        ],
-        "name": "getWithdrawEstimate",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "amountToken1",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amountToken2",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    }
-]
-```
-
-{% hint style="info" %}  
-An Application Binary Interface (ABI) is a JSON object which stores the metadata about the methods of a contract like data type of input parameters, return data type & property of the method like payable, view, pure, etc. You can learn more about the ABI from the [solidity documentation](https://docs.soliditylang.org/en/latest/abi-spec.html)  
-{% endhint %}
+* **ContainerComponent** :- 
+This component renders the main body of our application which contains the center box containing the tabs to switch between the four components Swap, Provide, Faucet, Withdraw. And also renders the account details and pool details.
 
 Now it's time to run our React app. Use the following command to start the React app.
-```bash
+```text
 npm start
 ```
 
@@ -1779,30 +498,43 @@ npm start
 
 * Visit [http://localhost:3000](http://localhost:3000) to interact with the AMM.
 
-[![DEMO]()](demo.mp4)
+* Getting funds from the faucet to interact with the AMM
 
+![preview](../../../.gitbook/assets/create-an-amm-on-avalanche_faucet.gif)
+
+* Adding liquidity in the pool 
+
+![preview](../../../.gitbook/assets/create-an-amm-on-avalanche_provide.gif)
+
+* Swapping tokens
+
+![preview](../../../.gitbook/assets/create-an-amm-on-avalanche_swap.gif)
+
+* Withdrawing liquidity from the pool 
+
+![preview](../../../.gitbook/assets/create-an-amm-on-avalanche_withdraw.gif)
 
 # Conclusion
 Congratulations! We have successfully developed a working AMM model where users can swap tokens, provide & withdraw liquidity. As a next step, you can play around with the price formula, integrate the ERC20 standard, introduce fees as an incentive mechanism for providers or add slippage protection, and much more...
 
-## Troubleshooting
+# Troubleshooting
 
 **Transaction Failure**
 
 * Check if your account has sufficient balance at [fuji block-explorer](https://cchain.explorer.avax-test.network/). You can fund your address from the given [faucet](https://faucet.avax-test.network/)
 
-![Zero balance preview](https://raw.githubusercontent.com/realnimish/blockchain-chat-app/main/public/zero_balance.jpeg)
+![Zero balance preview](../../../.gitbook/assets/create-an-amm-on-avalanche_zero_balance.jpeg)
 
-* Make sure that you have selected the correct account on metamask if you have more than one account connected to the site.
+* Make sure that you have selected the correct account on Metamask if you have more than one account connected to the site.
 
-![Multiple account preview](https://raw.githubusercontent.com/realnimish/blockchain-chat-app/main/public/multiple_accounts.jpeg)
+![Multiple account preview](../../../.gitbook/assets/create-an-amm-on-avalanche_multiple_accounts.jpeg)
 
 # About the Author(s)  
 
-The tutorial was created by [Sayan Kar](https://github.com/SayanKar), [Yash Kothari](https://github.com/YASH) and [Nimish Agrawal](https://github.com/realnimish). You can reach out to them on [Figment Forum](https://community.figment.io/u/nimishagrawal100.in/) or on LinkedIn [@Nimish Agrawal](https://www.linkedin.com/in/realnimish), [@Yash Kothari](https://www.linkedin.com/in/YASH) and [@Sayan Kar](https://www.linkedin.com/in/sayan-kar-).
+The tutorial was created by [Sayan Kar](https://github.com/SayanKar), [Yash Kothari](https://github.com/Yashkothari9), and [Nimish Agrawal](https://github.com/realnimish). You can reach out to them on [Figment Forum](https://community.figment.io/u/nimishagrawal100.in/) for any query regarding the tutorial.
 
 # References
 
-- [Deploy a Smart Contract on Avalanche using Remix and MetaMask](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask)
-
 - [How Uniswap works](https://docs.uniswap.org/protocol/V2/concepts/protocol-overview/how-uniswap-works)
+
+- [Deploy a Smart Contract on Avalanche using Remix and MetaMask](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask)
