@@ -293,10 +293,10 @@ Open a terminal and navigate to the directory where we will create the applicati
 cd /path/to/directory
 ```
 
-Now clone the github repository, move into the newly `avalance-amm` directory and install all the dependencies.
+Now clone this github repository, move into the newly `avalance-amm` directory and install all the dependencies.
 
 ```text
-git clone https://github.com/SayanKar/avalanche-amm.git
+git clone https://github.com/realnimish/avalanche-amm.git
 cd avalanche-amm
 npm install
 ```
