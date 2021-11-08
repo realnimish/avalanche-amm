@@ -498,7 +498,7 @@ Visit [http://localhost:3000](http://localhost:3000) to interact with the AMM.
 
 # Walkthrough
 
-https://youtu.be/reTlVGURVok
+<iframe width="560" height="315" src="https://www.youtube.com/embed/reTlVGURVok" title="AMM Demo on Fuji-testnet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 # Conclusion
 Congratulations! We have successfully developed a working AMM model where users can swap tokens, provide & withdraw liquidity. As a next step, you can play around with the price formula, integrate the ERC20 standard, introduce fees as an incentive mechanism for providers or add slippage protection, and much more...
