@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/avalanche-amm/static/css/main.0f03f2fe.chunk.css",
+    "main.js": "/avalanche-amm/static/js/main.66481168.chunk.js",
+    "main.js.map": "/avalanche-amm/static/js/main.66481168.chunk.js.map",
+    "runtime-main.js": "/avalanche-amm/static/js/runtime-main.3cd59e44.js",
+    "runtime-main.js.map": "/avalanche-amm/static/js/runtime-main.3cd59e44.js.map",
+    "static/js/2.cef52153.chunk.js": "/avalanche-amm/static/js/2.cef52153.chunk.js",
+    "static/js/2.cef52153.chunk.js.map": "/avalanche-amm/static/js/2.cef52153.chunk.js.map",
+    "index.html": "/avalanche-amm/index.html",
+    "static/css/main.0f03f2fe.chunk.css.map": "/avalanche-amm/static/css/main.0f03f2fe.chunk.css.map",
+    "static/js/2.cef52153.chunk.js.LICENSE.txt": "/avalanche-amm/static/js/2.cef52153.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.3cd59e44.js",
+    "static/js/2.cef52153.chunk.js",
+    "static/css/main.0f03f2fe.chunk.css",
+    "static/js/main.66481168.chunk.js"
+  ]
+}
